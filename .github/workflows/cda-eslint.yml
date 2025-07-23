@@ -4,11 +4,11 @@ on: [push, pull_request]
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   eslint:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -20,23 +20,21 @@ jobs:
           key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-modules
 
-      - name: Install Node.js dependencies
+      - name: Install dependencies
         run: npm install
 
       - name: Create reports directory
         run: mkdir -p reports
 
-      - name: Install ESLint SARIF Formatter
-        run: npm install @microsoft/eslint-formatter-sarif --save-dev
+      - name: Install HTML formatter for ESLint
+        run: npm install eslint-formatter-html --save-dev
 
-      - name: Run ESLint with SARIF output
-        run: npx eslint . --format @microsoft/eslint-formatter-sarif --output-file reports/eslint-results.sarif || true
+      - name: Run ESLint and generate HTML report
+        run: |
+          npx eslint . --format node_modules/eslint-formatter-html/index.js -o reports/eslint-report.html || true
 
-      - name: Debug ESLint Output
-        run: cat reports/eslint-results.sarif || echo "No SARIF report generated"
-
-      - name: Upload SARIF report
-        if: github.repository == 'Hanwei43/ssd_lab7'
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload ESLint HTML report as artifact
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: reports/eslint-results.sarif
+          name: eslint-report
+          path: reports/eslint-report.html
