@@ -13,7 +13,6 @@ export default [
       globals: globals.browser,
       ecmaVersion: 2021,
       sourceType: "module",
-      ecmaFeatures: { jsx: true },
     },
     plugins: {
       js: pluginJs,
