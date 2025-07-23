@@ -1,10 +1,10 @@
-name: "CodeQL Analysis Lab"
+name: "CodeQL Plaintext Analysis"
 
 on: [push, pull_request]
 
 jobs:
   analyze:
-    name: Analyze Code with CodeQL
+    name: Analyze Code with CodeQL and Upload Plain Text Report
     runs-on: ubuntu-latest
 
     permissions:
@@ -20,27 +20,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup CodeQL CLI
+      - name: Initialize CodeQL
+        id: init-codeql
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           tools: latest
 
-      - name: Build CodeQL database
-        run: |
-          codeql database create codeql-db \
-            --language=${{ matrix.language }} \
-            --command="npm install && npm run build || true"
+      - name: Extract CodeQL CLI path
+        run: echo "CODEQL_PATH=$(which codeql)" >> $GITHUB_ENV
 
-      - name: Run CodeQL query suite
+      - name: Install dependencies (if needed)
+        run: npm install
+
+      - name: Create CodeQL database
         run: |
-          codeql database analyze codeql-db \
-            --format=sarifv2.1.0 \
-            --output=codeql-results.sarif \
+          $CODEQL_PATH database create codeql-db \
+            --language=${{ matrix.language }} \
+            --command="true"  # Or your actual build command
+
+      - name: Run CodeQL queries with CSV output
+        run: |
+          mkdir -p reports
+          $CODEQL_PATH database analyze codeql-db \
+            --format=csv \
+            --output=reports/codeql-results.csv \
             --rerun
 
-      - name: Upload SARIF results as artifact (not to code scanning)
+      - name: Upload plain text CodeQL report
         uses: actions/upload-artifact@v4
         with:
-          name: codeql-results
-          path: codeql-results.sarif
+          name: codeql-report
+          path: reports/codeql-results.csv
