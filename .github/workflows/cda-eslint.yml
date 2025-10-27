@@ -34,7 +34,7 @@ jobs:
           npx eslint . --format node_modules/eslint-formatter-html/index.js -o reports/eslint-report.html || true
 
       - name: Upload ESLint HTML report as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: eslint-report
           path: reports/eslint-report.html
